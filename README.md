@@ -1,4 +1,4 @@
-# aws-ops-automation
+# aws-cloud-automation
 
 ## Overview
 
