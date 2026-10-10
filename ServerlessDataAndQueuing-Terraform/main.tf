@@ -1,99 +1,54 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
-provider "aws" {
-  region                      = "us-east-1"
-  access_key                  = "test"
-  secret_key                  = "test"
-  skip_credentials_validation = true
-  skip_metadata_api_check     = true
-  skip_requesting_account_id  = true
-  s3_use_path_style           = true
-
-  # Direct all AWS API endpoints to local MiniStack
-  endpoints {
-    cloudwatch = "http://localhost:4566"
-    dynamodb   = "http://localhost:4566"
-    s3         = "http://localhost:4566"
-    sns        = "http://localhost:4566"
-    sqs        = "http://localhost:4566"
-  }
-}
-
-# -------------------------------------------------------------
-# 1. Alert Notification (SNS)
-# -------------------------------------------------------------
-resource "aws_sns_topic" "sre_alerts" {
-  name = "sre-alerts-topic"
-}
-
-# -------------------------------------------------------------
-# 2. Dead Letter & Incident Queue (SQS)
-# -------------------------------------------------------------
-resource "aws_sqs_queue" "sre_dlq" {
-  name = "sre-dlq"
-}
-
-# Subscribe the SQS queue to the SNS topic
-resource "aws_sns_topic_subscription" "alerts_to_sqs" {
-  topic_arn = aws_sns_topic.sre_alerts.arn
-  protocol  = "sqs"
-  endpoint  = aws_sqs_queue.sre_dlq.arn
-}
-
-# -------------------------------------------------------------
-# 3. Observability & Alarm (CloudWatch)
-# -------------------------------------------------------------
-resource "aws_cloudwatch_metric_alarm" "high_error_rate" {
-  alarm_name          = "high-error-rate-alarm"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = 1
-  metric_name         = "HTTPCode_Target_5XX_Count"
-  namespace           = "AWS/ApplicationELB"
-  period              = 60
-  statistic           = "Sum"
-  threshold           = 5
-  alarm_description   = "Triggers when target 5xx errors exceed threshold."
-
-  # Route alarm breach directly to the SNS alert topic
-  alarm_actions = [aws_sns_topic.sre_alerts.arn]
-}
-
-# -------------------------------------------------------------
-# 4. Storage & Incident State (S3 & DynamoDB)
-# -------------------------------------------------------------
-resource "aws_s3_bucket" "audit_logs" {
-  bucket = "sre-audit-logs-local"
-}
-
-resource "aws_dynamodb_table" "incidents" {
-  name         = "incidents-table"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "IncidentId"
-
-  attribute {
-    name = "IncidentId"
-    type = "S"
-  }
-}
-
-# -------------------------------------------------------------
-# Terraform Outputs
-# -------------------------------------------------------------
-output "sns_topic_arn" {
-  value = aws_sns_topic.sre_alerts.arn
-}
-
-output "sqs_queue_url" {
-  value = aws_sqs_queue.sre_dlq.id
-}
-
-output "dynamodb_table_name" {
-  value = aws_dynamodb_table.incidents.name
-}
+AWS Cloud Automation & Serverless Data Queuing Stack
+A production-grade, modular Infrastructure as Code (IaC) repository demonstrating automated serverless data pipelines, resilient queuing systems, incident tracking, and monitoring using Terraform.
+This project is structured for both native AWS deployments and rapid local development and testing using MiniStack / LocalStack (`localhost:4566`).
+---
+🏗️ Architecture & Core Components
+The core stack (`main.tf`) orchestrates a resilient serverless monitoring and event-driven data pipeline:
+Amazon S3 (`sre-audit-logs-local`): Secure bucket configured for audit log retention and storage.
+Amazon SQS (`sre-dlq`): Dead-Letter Queue designed for robust error handling and failed message isolation.
+Amazon SNS (`sre-alerts-topic`): Notification topic coupled with SQS subscriptions for automated alerting workflows.
+Amazon DynamoDB (`incidents-table`): On-demand (`PAY_PER_REQUEST`) NoSQL table for high-throughput incident tracking and state management.
+Amazon CloudWatch (`high-error-rate-alarm`): Automated metric alarm monitoring target application `5XX` error counts with threshold triggers.
+---
+📂 Repository Structure
+```text
+aws-cloud-automation/
+├── main.tf                    # Core infrastructure stack (S3, SQS, SNS, DynamoDB, CloudWatch)
+├── ec2_instances.tf           # EC2 compute configurations
+├── aws_ops_tool.py            # Python automation utility for AWS operations
+├── efs_cleanup.py             # Automated maintenance script for EFS storage
+├── URLEncoding.py             # Utility helper script for data formatting
+├── Terraform_CreatingS3/      # Dedicated modular S3 provisioning setup
+├── Terraform_creatingIAMUser/ # IAM user, group, and policy management
+├── amazon-eks-architecture/   # EKS cluster reference architecture & notes
+└── aws_ec2_ops/               # EC2 operational tooling and scripts
+```
+---
+🚀 Getting Started & Local Testing
+This project is fully compatible with local AWS emulators like MiniStack or LocalStack.
+Prerequisites
+Terraform (v1.0+)
+Docker (running MiniStack/LocalStack on port `4566`)
+1. Start Local Emulator
+Ensure your local MiniStack container is active:
+```bash
+docker start ministack
+```
+2. Initialize Terraform
+Navigate to the root directory and initialize the providers:
+```bash
+terraform init
+```
+3. Review and Apply
+Preview the infrastructure execution plan:
+```bash
+terraform plan
+```
+Deploy the stack:
+```bash
+terraform apply -auto-approve
+```
+---
+🛠️ Operational Tooling
+In addition to Terraform configurations, this repository includes Python automation scripts (`aws_ops_tool.py`, `efs_cleanup.py`) designed to assist SREs with day-2 operational tasks, file cleanups, and data encoding utilities.
+---
