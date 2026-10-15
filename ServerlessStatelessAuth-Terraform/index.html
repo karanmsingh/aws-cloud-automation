@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SRE Stateless App</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; background: #f4f4f9; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 400px; }
+        input { width: 100%; padding: 8px; margin: 8px 0; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #message { margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Stateless App Login</h2>
+        <input type="email" id="email" placeholder="max@example.com" value="max@example.com" required>
+        <input type="password" id="password" placeholder="sre_pass" value="sre_pass" required>
+        <button onclick="login()">Login</button>
+        <p id="message"></p>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:4566/restapis/e90c1f06/local/_user_request_/login";
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const messageElement = document.getElementById('message');
+            messageElement.innerText = "Authenticating...";
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+                messageElement.innerText = data.message;
+                messageElement.style.color = response.ok ? "green" : "red";
+            } catch (err) {
+                messageElement.innerText = "Connection Error.";
+                messageElement.style.color = "red";
+            }
+        }
+    </script>
+</body>
+</html>
