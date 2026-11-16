@@ -1,6 +1,6 @@
-# EC2 Tag-Based Automation & Local Testbed (`EC2_Ops`)
+# EC2 Tag-Based Automation (`EC2_Ops`)
 
-This directory houses the operational tooling and Infrastructure as Code (IaC) setup required to manage EC2 instance lifecycles dynamically using AWS tags. It includes a Python automation tool leveraging `boto3` and a modular Terraform testbed optimized for local simulation using LocalStack or MiniStack configurations.
+This repository houses the operational tooling and Infrastructure as Code (IaC) setup required to manage EC2 instance lifecycles dynamically using AWS tags. It includes a Python automation tool leveraging `boto3` and a modular Terraform testbed optimized for local simulation using LocalStack or MiniStack configurations.
 
 ## Directory Structure
 
