@@ -1,0 +1,44 @@
+name: CI Pipeline - Terraform & Helm
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-terraform:
+    name: Validate Terraform IaC
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Init
+        run: terraform init -backend=false
+
+      - name: Terraform Validate
+        run: terraform validate
+
+  lint-helm:
+    name: Lint & Render Helm Chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: latest
+
+      - name: Lint Helm Chart
+        run: helm lint charts/nginx-app
+
+      - name: Template Helm Chart
+        run: helm template nginx-prod charts/nginx-app > /dev/null
