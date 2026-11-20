@@ -10,6 +10,9 @@ jobs:
   validate-terraform:
     name: Validate Terraform IaC
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: EKSArchitecture-Terraform
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -28,6 +31,9 @@ jobs:
   lint-helm:
     name: Lint & Render Helm Chart
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: EKSArchitecture-Terraform
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
