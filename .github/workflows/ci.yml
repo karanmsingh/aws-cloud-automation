@@ -1,4 +1,4 @@
-name: CI Pipeline - Terraform & Helm
+name: EKS Terraform & Nginx Helm CI
 
 on:
   push:
